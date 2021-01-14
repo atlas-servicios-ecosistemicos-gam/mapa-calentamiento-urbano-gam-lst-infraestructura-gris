@@ -1,5 +1,5 @@
 ---
-title: "Mapa de temperatura superficial de infraestructura gris en la Gran Área Metropolitana"
+title: "Mapa de temperatura superficial (LST) de infraestructura gris de la Gran Área Metropolitana"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -22,7 +22,7 @@ library(raster)
 url_agfs_limite_gam <-
   "https://services9.arcgis.com/RrvMEynxDB8hycVO/arcgis/rest/services/gam_limite_gam/FeatureServer/0"
 
-url_raster_temperatura <-
+url_raster_lst <-
   "https://raw.githubusercontent.com/atlas-servicios-ecosistemicos-gam/datos-calentamiento-urbano/master/gam/LST_INFRAESTRUCTURA_GRIS_GAM_WEB.TIF"
 
 #--------------- Objetos sf y raster ---------------
@@ -36,21 +36,20 @@ sf_limite_gam_web <-
   sf_limite_gam %>%
   st_transform(3857)
 
-# Capa raster de temperatura (en Web Mercator)
-raster_temperatura <-
-  raster(url_raster_temperatura) %>%
+# Capa raster de LST (en Web Mercator)
+raster_lst <-
+  raster(url_raster_lst) %>%
   crop(sf_limite_gam_web) %>%
   mask(sf_limite_gam_web)
 
 #---------------- Paletas de colores ---------------
 
-# Probabilidad
-colores_temperatura <- c("blue", "green", "yellow", "red")
-etiquetas_temperatura <- c("Baja", "Media", "MA", "Alta")
-pal_temperatura <- 
+# LST
+colores_lst <- c("green", "yellow", "red")
+pal_lst <- 
   colorNumeric(
-    colores_temperatura, 
-    values(raster_temperatura),
+    colores_lst, 
+    values(raster_lst),
     na.color = "transparent"
   )
 
@@ -77,21 +76,21 @@ leaflet() %>%
     group = "Límite de la GAM"
   ) %>%
   addRasterImage(
-    raster_temperatura, 
-    colors = pal_temperatura,
+    raster_lst, 
+    colors = pal_lst,
     opacity = 0.9,
-    group = "Temperatura"
+    group = "LST"
   ) %>%  
   addLegend(
-    title = "Temperatura (°C)",
-    values = values(raster_temperatura),
-    pal = pal_temperatura,
+    title = "LST (°C)",
+    values = values(raster_lst),
+    pal = pal_lst,
     position = "bottomright",
-    group = "Temperatura"
+    group = "LST"
   ) %>%    
   addLayersControl(
     baseGroups = c("CartoDB Dark Matter", "OpenStreetMap", "Stamen Toner Lite", "Imágenes de ESRI"),
-    overlayGroups = c("Límite de la GAM", "Temperatura"),
+    overlayGroups = c("Límite de la GAM", "LST"),
     options = layersControlOptions(collapsed = TRUE)    
   ) %>%  
   addMiniMap(
