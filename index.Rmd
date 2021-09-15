@@ -1,5 +1,5 @@
 ---
-title: "Mapa de temperatura superficial (LST) de infraestructura gris de la Gran Área Metropolitana"
+title: "Mapa de temperatura superficial de la tierra (LST) en infraestructura gris de la Gran Área Metropolitana"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -39,10 +39,15 @@ sf_limite_gam_web <-
   st_transform(3857)
 
 # Capa raster de LST (en Web Mercator)
-raster_lst <-
+raster_lst_infraestructura_gris <-
   raster(url_raster_lst) %>%
   crop(sf_limite_gam_web) %>%
   mask(sf_limite_gam_web)
+
+raster_lst_infraestructura_gris[raster_lst_infraestructura_gris==65535] <- NA
+min_raster_lst_infraestructura_gris <- format(cellStats(raster_lst_infraestructura_gris, stat='min'), digits=3, nsmall=1)
+max_raster_lst_infraestructura_gris <- format(cellStats(raster_lst_infraestructura_gris, stat='max'), digits=3, nsmall=1)
+mean_raster_lst_infraestructura_gris <- format(cellStats(raster_lst_infraestructura_gris, stat='mean'), digits=3, nsmall=1)
 
 #---------------- Paletas de colores ---------------
 
@@ -51,13 +56,13 @@ colores_lst <- c("green", "yellow", "red")
 pal_lst <- 
   colorNumeric(
     colores_lst, 
-    values(raster_lst),
+    values(raster_lst_infraestructura_gris),
     na.color = "transparent"
   )
 
 ```
 
-Row
+Row {data-height=800}
 -----------------------------------------------------------------------
 
 ### 
@@ -78,7 +83,7 @@ leaflet() %>%
     group = "Límite de la GAM"
   ) %>%
   addRasterImage(
-    raster_lst, 
+    raster_lst_infraestructura_gris, 
     layerId = "raster",    
     colors = pal_lst,
     opacity = 0.9,
@@ -86,7 +91,7 @@ leaflet() %>%
   ) %>%  
   addLegend(
     title = "LST (°C)",
-    values = values(raster_lst),
+    values = values(raster_lst_infraestructura_gris),
     pal = pal_lst,
     position = "bottomright",
     group = "LST"
@@ -109,4 +114,31 @@ leaflet() %>%
   addSearchOSM() %>%
   addResetMapButton() %>%
   addOpacitySlider(layerId = "raster")
+```
+
+Row {data-height=200}
+-----------------------------------------------------------------------
+
+### Temperatura mínima {.value-box} {data-width=333}
+```{r}
+valueBox(
+  value = "LST mínima", 
+  caption = paste("<h2><strong>", min_raster_lst_infraestructura_gris,  "°C</strong></h2>")
+)
+```
+
+### Temperatura máxima {.value-box} {data-width=333}
+```{r}
+valueBox(
+  value = "LST máxima", 
+  caption = paste("<h2><strong>", max_raster_lst_infraestructura_gris,  "°C</strong></h2>")
+)
+```
+
+### Temperatura promedio {.value-box} {data-width=333}
+```{r}
+valueBox(
+  value = "LST promedio", 
+  caption = paste("<h2><strong>", mean_raster_lst_infraestructura_gris,  "°C</strong></h2>")
+)
 ```
